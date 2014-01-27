@@ -1,0 +1,5 @@
+usage: invoicer -r 'Foo Corp' -o invoice.pdf < timesheet.json
+
+  -r, --rcpt    invoice receipient
+  -o, --output  generate a pdf for this filename
+
