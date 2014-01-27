@@ -16,12 +16,18 @@ var configFile = path.join(configDir, 'config.json');
 if (!fs.existsSync(configFile)) {
     return prompter(function (err, cfg) {
         if (err) return console.error(err);
-        console.log(cfg);
+        fs.writeFileSync(configFile, JSON.stringify(cfg, null, 2));
+        withConfig(cfg);
     });
+}
+else withConfig(require(configFile))
+
+function withConfig (cfg) {
+    console.log(cfg);
 }
 
 function prompter (cb) {
-    var fields = [ 'name', 'address' ];
+    var fields = [ 'name', 'address', 'email' ];
     var cfg = {};
     console.log('Gathering configuration options.');
     console.log('Use \\n to denote line-breaks.');
