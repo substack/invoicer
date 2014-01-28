@@ -50,14 +50,17 @@ function withConfig (cfg) {
         expenses: expenses.reduce(function (acc, row) {
             if (row.rate && row.hours) {
                 var title = row.title || 'Consulting Hours';
-                acc.push('{\\bf Date} & {\\bf ' + title + '}');
-                acc.push.apply(acc, row.hours.map(function (r) {
-                    return strftime('%F', new Date(r.date)) + ' & ' + r.hours;
-                }));
+                acc.push('{\\bf ' + title + '} & ');
+                row.hours.forEach(function (r) {
+                    acc.push(
+                        strftime('%F', new Date(r.date))
+                        + ' & ' + r.hours + 'h * ' + row.rate
+                    );
+                });
             }
             if (row.items) {
-                var title = row.title || 'Expenses';
-                acc.push('{\\bf Item} & {\\bf ' + title + '}');
+                var title = row.title || 'expenses';
+                acc.push('{\\bf ' + title + '} & ');
                 acc.push.apply(acc, row.items.map(function (r) {
                     return r.title + ' & ' + r.amount;
                 }));
