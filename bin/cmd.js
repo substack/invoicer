@@ -133,6 +133,11 @@ function withConfig (cfg, expenses) {
     
     var tmpdir = path.join(os.tmpdir(), 'invoicer-' + Math.random());
     mkdirp.sync(tmpdir);
+    
+    if (/\.tex$/.test(outfile)) {
+        return fs.writeFileSync(outfile, output);
+    }
+    
     fs.writeFileSync(path.join(tmpdir, 'invoice.tex'), output);
     
     var args = [ '-interaction', 'nonstopmode', '-halt-on-error', 'invoice.tex' ];
