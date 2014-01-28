@@ -122,7 +122,6 @@ function withConfig (cfg) {
     
     ps.on('exit', function (code) {
         if (code !== 0) {
-            console.error('NONZERO EXIT CODE');
             console.error(stderr);
             return process.exit(1);
         }
