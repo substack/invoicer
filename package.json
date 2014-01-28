@@ -2,7 +2,7 @@
   "name": "invoicer",
   "version": "0.0.0",
   "description": "generate PDF invoices from json",
-  "main": "index.js",
+  "bin": "bin/cmd.js",
   "dependencies": {
     "concat-stream": "~1.4.1",
     "minimist": "~0.0.5",
