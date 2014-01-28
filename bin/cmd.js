@@ -64,7 +64,7 @@ function withConfig (cfg, expenses) {
         rcpt: argv.rcpt,
         expenses: expenses.reduce(function (acc, row) {
             if (row.rate && row.hours) {
-                var title = row.title || 'Consulting Hours';
+                var title = row.title || 'consulting';
                 acc.push('{\\bf ' + title + '} & ');
                 row.hours.forEach(function (r) {
                     acc.push(
@@ -87,12 +87,12 @@ function withConfig (cfg, expenses) {
             
         }, []).join(' \\\\\n') + ' \\\\\n',
         totals: (function () {
-            var hours = expenses.reduce(function (acc, row) {
-                if (row.type !== 'hours') return acc;
-                return row.hours.reduce(function (h, r) {
-                    return h + r.hours;
-                }, acc);
-            }, 0);
+            var hours = 0;
+            expenses.forEach(function (row) {
+                (row.hours || []).forEach(function (r) {
+                    hours += r.hours;
+                });
+            });
             
             var rates = Object.keys(expenses.reduce(function (acc, row) {
                 if (row.rate) acc[row.rate] = true;
