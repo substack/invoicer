@@ -3,6 +3,7 @@ usage: invoicer -r 'BEEPCORP HOLDINGS LTD' -e expenses.json -o invoice.pdf
   -r, --rcpt      invoice receipient
   -e, --expenses  expense sheet. If not given or '-', read from stdin.
   -o, --output    generate a pdf for this filename
+  -c FILE         config file (default: ~/.config/invoicer/config.json)            
 
 Here is an example expenses.json file:
 

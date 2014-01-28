@@ -11,7 +11,7 @@ var strftime = require('strftime');
 var os = require('os');
 
 var argv = require('minimist')(process.argv.slice(2), {
-    alias: { r: 'rcpt', e: 'expense', v: 'verbose' }
+    alias: { r: 'rcpt', e: 'expense', v: 'verbose', i: 'interactive' }
 });
 var outfile = argv.o;
 
@@ -27,8 +27,12 @@ var configDir = argv.c || path.join(
 );
 mkdirp.sync(configDir);
 
-var configFile = path.join(configDir, 'config.json');
+var configFile = argv.c || path.join(configDir, 'config.json');
 if (!fs.existsSync(configFile)) {
+    if (!process.stdin.isTTY && !argv.i) {
+        console.error('configuration file not found');
+        return process.exit(1);
+    }
     return prompter(function (err, cfg) {
         if (err) return console.error(err);
         writeConfig(cfg);
