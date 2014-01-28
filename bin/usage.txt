@@ -1,16 +1,22 @@
-usage: invoicer -r 'CARBINE HOLDINGS LTD' -e expenses.json -o invoice.pdf
+usage: invoicer -r 'BEEPCORP HOLDINGS LTD' -e expenses.json -o invoice.pdf
 
   -r, --rcpt      invoice receipient
-  -e, --expenses  expense sheet
+  -e, --expenses  expense sheet. If not given or '-', read from stdin.
   -o, --output    generate a pdf for this filename
 
 Here is an example expenses.json file:
 
   [
-    {"type":"hours","rate": 100, "hours":[
+    {"title":"consulting","rate": 100, "hours":[
       {"date":"2075-08-27","hours":2.5},
       {"date":"2075-08-28","hours":7},
       {"date":"2075-09-01","hours":5.5}
-    ]}
+    ]},
+    {"title":"travel","items":[
+      {"title":"airfare","amount":750},
+      {"title":"hotel","amount":240}
+    ]},
+    {"title":"hosting","amount":40}
   ]
+
 
