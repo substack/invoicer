@@ -5,6 +5,7 @@ var path = require('path');
 var mkdirp = require('mkdirp');
 var split = require('split');
 var through2 = require('through2');
+var concat = require('concat-stream');
 var sprintf = require('sprintf');
 var spawn = require('child_process').spawn;
 var strftime = require('strftime');
@@ -17,7 +18,6 @@ var outfile = argv.o;
 
 if (!outfile) return usage(1)
 if (!argv.rcpt) return usage(1)
-if (!argv.e) return usage(1)
 if (argv.h || argv.help) return usage(0);
 
 var texsrc = fs.readFileSync(__dirname + '/../invoice.tex', 'utf8');
@@ -36,15 +36,26 @@ if (!fs.existsSync(configFile)) {
     return prompter(function (err, cfg) {
         if (err) return console.error(err);
         writeConfig(cfg);
-        withConfig(cfg);
+        readJSON(cfg);
     });
 }
-else withConfig(require(configFile))
+else readJSON(require(configFile));
 
-function withConfig (cfg) {
+function readJSON (cfg) {
+    if (argv.e) {
+        var expenses = require(path.resolve(argv.e));
+        return withConfig(require(configFile), expenses);
+    }
+    
+    process.stdin.pipe(concat(function (body) {
+        var expenses = JSON.parse(body);
+        withConfig(require(configFile), expenses);
+    }));
+}
+
+function withConfig (cfg, expenses) {
     if (cfg.id === undefined) cfg.id = 1;
     
-    var expenses = require(path.resolve(argv.e));
     var params = {
         id: sprintf('%05d', cfg.id ++),
         name: cfg.name,
