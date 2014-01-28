@@ -19,4 +19,10 @@ Here is an example expenses.json file:
     {"title":"hosting","amount":40}
   ]
 
+For each `row` in the json array, `invoicer` only looks for:
 
+* `row.rate` and a `row.hours` array
+* `row.items` array
+* `row.amount`
+
+Each row should have a title.
