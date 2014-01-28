@@ -47,22 +47,27 @@ function withConfig (cfg) {
         address: cfg.address.replace(/\n/g, ' \\\\\n'),
         email: cfg.email,
         rcpt: argv.rcpt,
-        expenses: expenses.map(function (row) {
-            if (row.type === 'hours') {
+        expenses: expenses.reduce(function (acc, row) {
+            if (row.rate && row.hours) {
                 var title = row.title || 'Consulting Hours';
-                return '{\\bf Date} & {\\bf ' + title + '} \\\\\n'
-                    + (row.hours || []).map(function (r) {
-                        return strftime('%F', new Date(r.date))
-                            + ' & ' + r.hours + ' \\\\\n'
-                        ;
-                    }).join('\n') + '\n'
-                ;
+                acc.push('{\\bf Date} & {\\bf ' + title + '}');
+                acc.push.apply(acc, row.hours.map(function (r) {
+                    return strftime('%F', new Date(r.date)) + ' & ' + r.hours;
+                }));
             }
-            else {
-                return '{\\bf Item} & {\\bf ' + title + '} \\\\\n';
+            if (row.items) {
+                var title = row.title || 'Expenses';
+                acc.push('{\\bf Item} & {\\bf ' + title + '}');
+                acc.push.apply(acc, row.items.map(function (r) {
+                    return r.title + ' & ' + r.amount;
+                }));
             }
-            return '';
-        }),
+            if (row.amount) {
+                acc.push('{\\bf ' + row.title + '} & ' + row.amount);
+            }
+            return acc;
+            
+        }, []).join(' \\\\\n') + ' \\\\\n',
         totals: (function () {
             var hours = expenses.reduce(function (acc, row) {
                 if (row.type !== 'hours') return acc;
@@ -72,20 +77,23 @@ function withConfig (cfg) {
             }, 0);
             
             var rates = Object.keys(expenses.reduce(function (acc, row) {
-                if (row.type === 'hours') {
-                    acc[row.rate] = true;
-                }
+                if (row.rate) acc[row.rate] = true;
                 return acc;
             }, {}));
             
             var amount = expenses.reduce(function (acc, row) {
-                if (row.type === 'hours') {
-                    return acc + row.rate * row.hours.reduce(function (h, r) {
+                if (row.hours) {
+                    acc += row.rate * row.hours.reduce(function (h, r) {
                         return h + r.hours;
                     }, 0)
                 }
-                else if (row.type === 'amount') {
-                    return acc + row.amount;
+                if (row.items) {
+                    row.items.forEach(function (r) {
+                        acc += r.amount || 0;
+                    });
+                }
+                if (row.amount) {
+                    acc += row.amount;
                 }
                 return acc;
             }, 0) + ' ' + cfg.currency;
@@ -96,7 +104,7 @@ function withConfig (cfg) {
                     + rates.join(',') + ' ' + cfg.currency + '}',
                 '{\\bf Total (' + cfg.currency + ')} & {\\bf ' + amount + '}',
                 '\\hline'
-            ].join('\\\\\n') + '\n';
+            ].join(' \\\\\n') + ' \\\\\n';
         })()
     };
     
@@ -123,6 +131,7 @@ function withConfig (cfg) {
     ps.on('exit', function (code) {
         if (code !== 0) {
             console.error(stderr);
+            console.error(path.join(tmpdir,'invoice.tex'));
             return process.exit(1);
         }
         fs.createReadStream(path.join(tmpdir, 'invoice.pdf'))
