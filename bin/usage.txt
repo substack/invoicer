@@ -1,4 +1,4 @@
-usage: invoicer -r 'Foo Corp' -e expenses.json -o invoice.pdf
+usage: invoicer -r 'CARBINE HOLDINGS LTD' -e expenses.json -o invoice.pdf
 
   -r, --rcpt      invoice receipient
   -e, --expenses  expense sheet

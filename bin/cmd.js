@@ -11,7 +11,7 @@ var strftime = require('strftime');
 var os = require('os');
 
 var argv = require('minimist')(process.argv.slice(2), {
-    alias: { r: 'rcpt', e: 'expense' }
+    alias: { r: 'rcpt', e: 'expense', v: 'verbose' }
 });
 var outfile = argv.o;
 
@@ -58,6 +58,9 @@ function withConfig (cfg) {
                     }).join('\n') + '\n'
                 ;
             }
+            else {
+                return '{\\bf Item} & {\\bf ' + title + '} \\\\\n';
+            }
             return '';
         }),
         totals: (function () {
@@ -77,9 +80,12 @@ function withConfig (cfg) {
             
             var amount = expenses.reduce(function (acc, row) {
                 if (row.type === 'hours') {
-                    return row.rate * row.hours.reduce(function (h, r) {
+                    return acc + row.rate * row.hours.reduce(function (h, r) {
                         return h + r.hours;
                     }, 0)
+                }
+                else if (row.type === 'amount') {
+                    return acc + row.amount;
                 }
                 return acc;
             }, 0) + ' ' + cfg.currency;
@@ -103,14 +109,23 @@ function withConfig (cfg) {
     mkdirp.sync(tmpdir);
     fs.writeFileSync(path.join(tmpdir, 'invoice.tex'), output);
     
-    var args = [ '-interaction=nonstopmode -halt-on-error', 'invoice.tex' ];
+    var args = [ '-interaction', 'nonstopmode', '-halt-on-error', 'invoice.tex' ];
     var ps = spawn('pdflatex', args, { cwd: tmpdir });
     
-    ps.stdout.pipe(process.stdout);
+    var stderr = '';
+    ps.stdout.on('data', function (buf) { stderr += buf });
+    
+    if (argv.v) {
+        ps.stdout.pipe(process.stdout);
+    }
     ps.stderr.pipe(process.stderr);
     
     ps.on('exit', function (code) {
-        if (code !== 0) return console.error('NONZERO EXIT CODE');
+        if (code !== 0) {
+            console.error('NONZERO EXIT CODE');
+            console.error(stderr);
+            return process.exit(1);
+        }
         fs.createReadStream(path.join(tmpdir, 'invoice.pdf'))
             .pipe(fs.createWriteStream(outfile))
         ;
@@ -135,7 +150,8 @@ function prompter (cb) {
         cfg[field] = line.toString('utf8').replace(/\\n/g, '\n');
         
         if (fields.length === 0) {
-            return cb(null, cfg);
+            cb(null, cfg);
+            process.stdin.end();
         }
         else {
             field = fields.shift();
