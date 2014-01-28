@@ -23,7 +23,10 @@ generate PDF invoices from json
 $ invoicer -r 'BEEPCORP HOLDINGS LTD' -e expenses.json -o invoice.pdf
 ```
 
-And then you will have a fancy `invoice.pdf` that you can email or whatever.
+The first time you run invoicer you will be prompted to enter your name,
+address, email, and currency.
+
+Once invoicer finishes you will have a fancy `invoice.pdf`.
 
 # usage
 
