@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{tabularx}
+\usepackage[parfill]{parskip}
+\renewcommand{\arraystretch}{1.5}
+
+\begin{document}
+
+{\bf Invoice ID:} ${id} \\
+{\bf Date:} \today \\
+
+${name} \\
+${address} \hfill ${email}
+\\ \\
+{\bf Invoice To:} \\
+${rcpt}
+
+\vspace{1em}
+
+{\bf Expenses:}
+
+\begin{tabular}{ l r }
+\hline
+${expenses}
+\hline
+${totals}
+\end{tabular}
+
+\vspace{2em}
+
+\end{document}
