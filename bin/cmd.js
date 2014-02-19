@@ -12,12 +12,19 @@ var strftime = require('strftime');
 var os = require('os');
 
 var argv = require('minimist')(process.argv.slice(2), {
-    alias: { r: 'rcpt', e: 'expense', v: 'verbose', i: 'interactive' }
+    alias: {
+        r: 'rcpt',
+        e: 'expense',
+        v: 'verbose',
+        i: 'interactive',
+        m: 'mode',
+        o: 'output'
+    }
 });
 var outfile = argv.o;
+var mode = argv.mode || /\.pdf$/.test(outfile) || 'text';
 
-if (!outfile) return usage(1)
-if (!argv.rcpt) return usage(1)
+if (mode === 'pdf' && !argv.rcpt) return usage(1)
 if (argv.h || argv.help) return usage(0);
 
 var texsrc = fs.readFileSync(__dirname + '/../invoice.tex', 'utf8');
@@ -55,6 +62,9 @@ function readJSON (cfg) {
 
 function withConfig (cfg, expenses) {
     if (cfg.id === undefined) cfg.id = 1;
+    if (mode === 'text') {
+        return console.log(expenses);
+    }
     
     var params = {
         id: sprintf('%05d', cfg.id ++),
