@@ -10,6 +10,7 @@ var sprintf = require('sprintf');
 var spawn = require('child_process').spawn;
 var strftime = require('strftime');
 var os = require('os');
+var table = require('text-table');
 
 var argv = require('minimist')(process.argv.slice(2), {
     alias: {
@@ -63,7 +64,26 @@ function readJSON (cfg) {
 function withConfig (cfg, expenses) {
     if (cfg.id === undefined) cfg.id = 1;
     if (mode === 'text') {
-        return console.log(expenses);
+        var hours = expenses[0].hours.map(function (row) {
+            return [ row.date, row.hours ];
+        });
+        var total = expenses[0].hours.reduce(function (sum, row) {
+            return sum + row.hours;
+        }, 0);
+        var totals = [
+            [ '-----------', '-----' ],
+            [ 'total hours', total ],
+            [ 'hourly rate', expenses[0].rate ],
+            [ 'total', total * expenses[0].rate ]
+        ];
+        console.log(table(
+            [
+                [ 'date', 'hours' ],
+                [ '----', '-----' ]
+            ].concat(hours).concat(totals),
+            { align: [ 'l', 'l', 'l' ] }
+        ));
+        return;
     }
     
     var params = {
