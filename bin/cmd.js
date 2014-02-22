@@ -19,7 +19,8 @@ var argv = require('minimist')(process.argv.slice(2), {
         v: 'verbose',
         i: 'interactive',
         m: 'mode',
-        o: 'output'
+        o: 'output',
+        t: 'template'
     }
 });
 var outfile = argv.o;
@@ -28,7 +29,8 @@ var mode = argv.mode || /\.pdf$/.test(outfile) || 'text';
 if (mode === 'pdf' && !argv.rcpt) return usage(1)
 if (argv.h || argv.help) return usage(0);
 
-var texsrc = fs.readFileSync(__dirname + '/../invoice.tex', 'utf8');
+var template = argv.template || path.join(__dirname, '..', 'invoice.tex');
+var texsrc = fs.readFileSync(template, 'utf8');
 
 var configDir = argv.c || path.join(
     process.env.HOME || process.env.USERDIR, '.config', 'invoicer'
