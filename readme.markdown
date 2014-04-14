@@ -37,6 +37,7 @@ usage: invoicer -r 'BEEPCORP HOLDINGS LTD' -e expenses.json -o invoice.pdf
   -e, --expenses  expense sheet. If not given or '-', read from stdin.
   -o, --output    generate a pdf for this filename
   -m, --mode      mode to use (implied by the extension in -o, otherwise "text")
+  -t, --template  use a custom LaTeX template
   -c FILE         config file (default: ~/.config/invoicer/config.json)            
 
 Here is an example expenses.json file:
