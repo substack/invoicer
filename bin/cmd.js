@@ -149,12 +149,12 @@ function withConfig (cfg, expenses) {
             }, 0) + ' ' + cfg.currency;
             
             return [
-                '{\\bf Total Hours} & {\\bf ' + hours + '}',
-                '{\\bf Hourly Rate} & {\\bf '
-                    + rates.join(',') + ' ' + cfg.currency + '}',
+                hours && ('{\\bf Total Hours} & {\\bf ' + hours + '}'),
+                hours && ('{\\bf Hourly Rate} & {\\bf '
+                    + rates.join(',') + ' ' + cfg.currency + '}'),
                 '{\\bf Total (' + cfg.currency + ')} & {\\bf ' + amount + '}',
                 '\\hline'
-            ].join(' \\\\\n') + ' \\\\\n';
+            ].filter(Boolean).join(' \\\\\n') + ' \\\\\n';
         })()
     };
     
