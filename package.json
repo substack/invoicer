@@ -1,6 +1,6 @@
 {
   "name": "invoicer",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "generate PDF invoices from json",
   "bin": "bin/cmd.js",
   "dependencies": {
