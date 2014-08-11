@@ -74,9 +74,9 @@ function withConfig (cfg, expenses) {
         }, 0);
         var totals = [
             [ '-----------', '-----' ],
-            [ 'total hours', total ],
+            [ 'total hours', round(total, 100) ],
             [ 'hourly rate', expenses[0].rate ],
-            [ 'total', total * expenses[0].rate ]
+            [ 'total', round(total * expenses[0].rate, 100) ]
         ];
         console.log(table(
             [
@@ -125,13 +125,14 @@ function withConfig (cfg, expenses) {
                     hours += r.hours;
                 });
             });
+            hours = round(hours, 100);
             
             var rates = Object.keys(expenses.reduce(function (acc, row) {
                 if (row.rate) acc[row.rate] = true;
                 return acc;
             }, {}));
             
-            var amount = expenses.reduce(function (acc, row) {
+            var amount = round(expenses.reduce(function (acc, row) {
                 if (row.hours) {
                     acc += row.rate * row.hours.reduce(function (h, r) {
                         return h + r.hours;
@@ -146,7 +147,7 @@ function withConfig (cfg, expenses) {
                     acc += row.amount;
                 }
                 return acc;
-            }, 0) + ' ' + cfg.currency;
+            }, 0), 100) + ' ' + cfg.currency;
             
             return [
                 hours && ('{\\bf Total Hours} & {\\bf ' + hours + '}'),
@@ -231,4 +232,8 @@ function usage (code) {
     rs.on('close', function () {
         if (code !== 0) process.exit(code);
     });
+}
+
+function round (n, ths) {
+    return Math.round(n * ths) / ths;
 }
