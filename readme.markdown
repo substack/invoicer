@@ -28,6 +28,10 @@ address, email, and currency.
 
 Once invoicer finishes you will have a fancy `invoice.pdf`.
 
+_How_ fancy an invoice? Glad you asked:
+
+![Screenshot of PDF invoice](images/invoice.png)
+
 # usage
 
 ```
