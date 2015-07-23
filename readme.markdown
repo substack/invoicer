@@ -24,7 +24,7 @@ $ invoicer -r 'BEEPCORP HOLDINGS LTD' -e expenses.json -o invoice.pdf
 ```
 
 The first time you run invoicer you will be prompted to enter your name,
-address, email, and currency.
+address, email, and the name of the currency needed.
 
 Once invoicer finishes you will have a fancy `invoice.pdf`.
 
