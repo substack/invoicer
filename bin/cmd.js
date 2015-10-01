@@ -7,10 +7,10 @@ var split = require('split');
 var through2 = require('through2');
 var concat = require('concat-stream');
 var sprintf = require('sprintf');
-var spawn = require('child_process').spawn;
 var strftime = require('strftime');
-var os = require('os');
 var table = require('text-table');
+var pdfkit = require('pdfkit');
+
 
 var argv = require('minimist')(process.argv.slice(2), {
     alias: {
@@ -19,8 +19,7 @@ var argv = require('minimist')(process.argv.slice(2), {
         v: 'verbose',
         i: 'interactive',
         m: 'mode',
-        o: 'output',
-        t: 'template'
+        o: 'output'
     }
 });
 var outfile = argv.o;
@@ -28,9 +27,6 @@ var mode = argv.mode || /\.pdf$/.test(outfile) || 'text';
 
 if (mode === 'pdf' && !argv.rcpt) return usage(1)
 if (argv.h || argv.help) return usage(0);
-
-var template = argv.template || path.join(__dirname, '..', 'invoice.tex');
-var texsrc = fs.readFileSync(template, 'utf8');
 
 var configDir = argv.c || path.join(
     process.env.HOME || process.env.USERDIR, '.config', 'invoicer'
@@ -88,112 +84,100 @@ function withConfig (cfg, expenses) {
         return;
     }
     
-    var params = {
-        id: sprintf('%05d', cfg.id ++),
-        name: cfg.name,
-        address: cfg.address.replace(/\n/g, ' \\\\\n'),
-        email: cfg.email,
-        rcpt: argv.rcpt,
-        expenses: expenses.reduce(function (acc, row) {
-            if (row.rate && row.hours) {
-                var title = row.title || 'consulting';
-                acc.push('{\\bf ' + title + '} & ');
-                row.hours.forEach(function (r) {
-                    acc.push(
-                        strftime('%F', new Date(r.date))
-                        + ' & ' + r.hours + 'h * ' + row.rate
-                    );
-                });
+    var doc = new pdfkit();
+    doc.pipe(fs.createWriteStream(outfile));
+
+    doc.font('Times-Roman', 12)
+
+    doc.text('Invoice ID: ', { continued: true })
+      .fillColor('#666')
+      .text(sprintf('%05d', cfg.id ++)).fillColor('black');
+
+    doc.text('Date: ', { continued: true })
+      .fillColor('#666')
+      .text(new Date().toJSON().slice(0,10));
+
+    doc.moveDown().text(cfg.name);
+    doc.text(cfg.address, { continued: true})
+        .text(cfg.email, { align: 'right'});
+
+    doc.moveDown().fillColor('black').text('Invoice To:');
+
+    doc.fillColor('#666').text(argv.rcpt).moveDown(2);
+
+    doc.fillColor('black').text('Expenses:');
+    doc.text('________________________________');
+
+    var opts = { width: 180, continued: true, lineGap: 6 };
+
+    expenses.forEach(function (row) {
+        if (row.rate && row.hours) {
+            doc.fillColor('black').text(row.title, { lineGap: 6 })
+                .fillColor('#666');
+            row.hours.forEach(function (r) {
+                doc.text(strftime('%F', new Date(r.date)), opts)
+                    .text(r.hours + 'h * ' + row.rate, { align: 'right' });
+            });
+        }
+        if (row.items) {
+            var title = row.title || 'expenses';
+            doc.fillColor('black').moveDown().text(title, {lineGap: 6})
+                .fillColor('#666');
+
+            row.items.forEach(function (r) {
+                doc.text(r.title, opts).text(r.amount, { align: 'right' });
+            });
+        }
+        if (row.amount) {
+            doc.fillColor('black').moveDown().text(row.title, opts)
+                .fillColor('#666')
+                .text(row.amount, { align: 'right' });
+        }
+    });
+
+    (function () {
+        var hours = 0;
+        expenses.forEach(function (row) {
+            (row.hours || []).forEach(function (r) {
+                hours += r.hours;
+            });
+        });
+        hours = round(hours, 100);
+        
+        var rates = Object.keys(expenses.reduce(function (acc, row) {
+            if (row.rate) acc[row.rate] = true;
+            return acc;
+        }, {}));
+
+        var amount = round(expenses.reduce(function (acc, row) {
+            if (row.hours) {
+                acc += row.rate * row.hours.reduce(function (h, r) {
+                    return h + r.hours;
+                }, 0)
             }
             if (row.items) {
-                var title = row.title || 'expenses';
-                acc.push('{\\bf ' + title + '} & ');
-                acc.push.apply(acc, row.items.map(function (r) {
-                    return r.title + ' & ' + r.amount;
-                }));
+                row.items.forEach(function (r) {
+                    acc += r.amount || 0;
+                });
             }
             if (row.amount) {
-                acc.push('{\\bf ' + row.title + '} & ' + row.amount);
+                acc += row.amount;
             }
             return acc;
-            
-        }, []).join(' \\\\\n') + ' \\\\\n',
-        totals: (function () {
-            var hours = 0;
-            expenses.forEach(function (row) {
-                (row.hours || []).forEach(function (r) {
-                    hours += r.hours;
-                });
-            });
-            hours = round(hours, 100);
-            
-            var rates = Object.keys(expenses.reduce(function (acc, row) {
-                if (row.rate) acc[row.rate] = true;
-                return acc;
-            }, {}));
-            
-            var amount = round(expenses.reduce(function (acc, row) {
-                if (row.hours) {
-                    acc += row.rate * row.hours.reduce(function (h, r) {
-                        return h + r.hours;
-                    }, 0)
-                }
-                if (row.items) {
-                    row.items.forEach(function (r) {
-                        acc += r.amount || 0;
-                    });
-                }
-                if (row.amount) {
-                    acc += row.amount;
-                }
-                return acc;
-            }, 0), 100) + ' ' + cfg.currency;
-            
-            return [
-                hours && ('{\\bf Total Hours} & {\\bf ' + hours + '}'),
-                hours && ('{\\bf Hourly Rate} & {\\bf '
-                    + rates.join(',') + ' ' + cfg.currency + '}'),
-                '{\\bf Total (' + cfg.currency + ')} & {\\bf ' + amount + '}',
-                '\\hline'
-            ].filter(Boolean).join(' \\\\\n') + ' \\\\\n';
-        })()
-    };
-    
-    var output = texsrc.replace(
-        /(?!\\)\${([^}]+)}/g,
-        function (_, key) { return params[key] }
-    );
-    
-    var tmpdir = path.join(os.tmpdir(), 'invoicer-' + Math.random());
-    mkdirp.sync(tmpdir);
-    
-    if (/\.tex$/.test(outfile)) {
-        return fs.writeFileSync(outfile, output);
-    }
-    
-    fs.writeFileSync(path.join(tmpdir, 'invoice.tex'), output);
-    
-    var args = [ '-interaction', 'nonstopmode', '-halt-on-error', 'invoice.tex' ];
-    var ps = spawn('pdflatex', args, { cwd: tmpdir });
-    
-    var stderr = '';
-    ps.stdout.on('data', function (buf) { stderr += buf });
-    
-    if (argv.v) {
-        ps.stdout.pipe(process.stdout);
-    }
-    ps.stderr.pipe(process.stderr);
-    
-    ps.on('exit', function (code) {
-        if (code !== 0) {
-            console.error(stderr);
-            console.error(path.join(tmpdir,'invoice.tex'));
-            return process.exit(1);
-        }
-        fs.createReadStream(path.join(tmpdir, 'invoice.pdf'))
-            .pipe(fs.createWriteStream(outfile))
-        ;
-    });
+        }, 0), 100) + ' ' + cfg.currency;
+        
+        doc.fillColor('black').text('________________________________');
+
+        doc.text('Total Hours', opts).text(hours, { align: 'right' });
+        doc.text('Hourly Rate', opts)
+            .text(rates.join(',') + ' ' + cfg.currency, { align: 'right' });
+        doc.text('Total (USD)', opts).text(amount, { align: 'right' });
+
+        doc.fillColor('black').moveUp()
+            .text('________________________________');
+    })();
+
+    doc.end();
     
     writeConfig(cfg);
 }
