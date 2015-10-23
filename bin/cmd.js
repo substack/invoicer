@@ -115,7 +115,7 @@ function withConfig (cfg, expenses) {
             doc.fillColor('black').text(row.title, { lineGap: 6 })
                 .fillColor('#666');
             row.hours.forEach(function (r) {
-                doc.text(strftime('%F', new Date(r.date)), opts)
+                doc.text(r.date, opts)
                     .text(r.hours + 'h * ' + row.rate, { align: 'right' });
             });
         }
