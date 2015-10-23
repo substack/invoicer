@@ -7,7 +7,6 @@ var split = require('split');
 var through2 = require('through2');
 var concat = require('concat-stream');
 var sprintf = require('sprintf');
-var strftime = require('strftime');
 var table = require('text-table');
 var pdfkit = require('pdfkit');
 

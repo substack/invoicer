@@ -10,7 +10,6 @@
     "pdfkit": "^0.7.1",
     "split": "~0.2.10",
     "sprintf": "~0.1.3",
-    "strftime": "~0.6.2",
     "text-table": "^0.2.0",
     "through2": "~0.4.1"
   },
