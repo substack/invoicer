@@ -8,7 +8,7 @@ var through2 = require('through2');
 var concat = require('concat-stream');
 var sprintf = require('sprintf');
 var spawn = require('child_process').spawn;
-var strftime = require('strftime');
+var strftime = require('strftime').strftimeUTC;
 var os = require('os');
 var table = require('text-table');
 
