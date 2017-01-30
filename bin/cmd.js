@@ -192,10 +192,8 @@ function withConfig (cfg, expenses) {
         }
         fs.createReadStream(path.join(tmpdir, 'invoice.pdf'))
             .pipe(fs.createWriteStream(outfile))
-        ;
+        writeConfig(cfg);
     });
-    
-    writeConfig(cfg);
 }
 
 function writeConfig (cfg) {
