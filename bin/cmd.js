@@ -32,12 +32,14 @@ if (argv.h || argv.help) return usage(0);
 var template = argv.template || path.join(__dirname, '..', 'invoice.tex');
 var texsrc = fs.readFileSync(template, 'utf8');
 
-var configDir = argv.c || path.join(
-    process.env.HOME || process.env.USERDIR, '.config', 'invoicer'
-);
+var configDir = argv.c
+    ? path.dirname(path.resolve(process.cwd(), argv.c))
+    : path.join(process.env.HOME || process.env.USERDIR, '.config', 'invoicer');
+
 mkdirp.sync(configDir);
 
-var configFile = argv.c || path.join(configDir, 'config.json');
+var configFile = path.join(configDir, argv.c || 'config.json');
+
 if (!fs.existsSync(configFile)) {
     if (!process.stdin.isTTY && !argv.i) {
         console.error('configuration file not found');
