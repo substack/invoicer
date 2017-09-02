@@ -32,7 +32,7 @@ if (argv.h || argv.help) return usage(0);
 var template = argv.template || path.join(__dirname, '..', 'invoice.tex');
 var texsrc = fs.readFileSync(template, 'utf8');
 
-var configDir = argv.c || path.join(
+var configDir = (argv.c ? path.dirname(argv.c) : null) || path.join(
     process.env.HOME || process.env.USERDIR, '.config', 'invoicer'
 );
 mkdirp.sync(configDir);
