@@ -24,7 +24,7 @@ var argv = require('minimist')(process.argv.slice(2), {
     }
 });
 var outfile = argv.o;
-var mode = argv.mode || /\.pdf$/.test(outfile) || 'text';
+var mode = argv.mode || /\.(pdf|tex)$/.test(outfile) || 'text';
 
 if (mode === 'pdf' && !argv.rcpt) return usage(1)
 if (argv.h || argv.help) return usage(0);
